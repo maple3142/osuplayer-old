@@ -68,11 +68,11 @@ function endload(data,start){
 }
 app.on('ready',createWindow);
 app.on('window-all-closed',()=>{
-    app.quit()
+    app.quit();
 });
 app.on('activate',()=>{
     if(win===null){
-        createWindow()
+        createWindow();
     }
 });
 ipcMain.on('start',(e,data)=>{
@@ -99,6 +99,6 @@ function createWindow () {
     var menu=Menu.buildFromTemplate(require('./meumTemplate.js')({process,win}));
     Menu.setApplicationMenu(menu);
     win.on('closed', () => {
-        win=null
+        win=null;
     });
 }
