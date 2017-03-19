@@ -17,12 +17,27 @@
         <!--css-->
     </head>
     <body class="container-fluid">
+        <!--modal-->
+        <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog" data-dismiss="modal">
+                <div class="modal-content"  >              
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <a id="oip">
+                            <img src="#" class="imagepreview" style="width: 100%;">
+                        </a>
+                    </div>         
+                </div>
+            </div>
+        </div>
+        <!--modal-->
     <div class="row">
         <div id="loading" class="text-center col"><h1>loading...</h1></div>
         <div id="plist">
             <input class="search form-control navbar-fixed-top" id="#search" placeholder="Search...">
             <span class="input-group-btn sort" data-sort="title"></span>
             <span class="input-group-btn sort" data-sort="artist"></span>
+            <span class="input-group-btn sort" data-sort="orititle"></span>
             <ul class="list list-group">
                 
             </ul>
@@ -33,7 +48,19 @@
         </div>
     </div>
     <script>
-        var now;
+        var now,path=require('path'),bm='http://osu.ppy.sh/s/';
+        var {shell,clipboard}=require('electron');
+        $(document).on('click','a[href^="http"]',e=>{
+            e.preventDefault();
+            shell.openExternal(e.target.href);
+        });
+        $('#oip').contextmenu(e=>{
+            shell.openExternal(e.originalEvent.target.src);
+        });
+        $(document).on('contextmenu','a[href^="http"]',e=>{
+            e.preventDefault();
+            clipboard.writeText(e.originalEvent.target.innerText);
+        });
         function rd(min,max) {
             return Math.random()*(max-min)+min;
         }
@@ -60,14 +87,16 @@
         }
         updmode(1);
         function play(f){
+            if(now&&f.text()==now.text())return;
             now=f;
             $('#audio')[0].src=f.attr('data-mp3');
             $('#audio')[0].play();
             $('#title').text(f.find('.title').text());
             $('title').text('Osu!Player <'+f.find('.title').text()+'>');
             $('.list-group-item-success').removeClass('list-group-item-success');
-            $(now).addClass('list-group-item-success');
-
+            $('.img').hide();
+            now.addClass('list-group-item-success').find('.img').show();
+            
         }
         window.onload=()=>{
             var ipc=require('electron').ipcRenderer;
@@ -81,19 +110,28 @@
                 for(i of list){
                     $('.list').append(
                         $('<li>').append(
-                            $('<span>').append(i.title).addClass('title')
+                            $('<span>').append(
+                                $('<a>').append(i.title).attr('href',path.join(bm,i.id))
+                            ).addClass('title')
                         ).append(
                             $('<span>').append(i.artist).addClass('artist').addClass('pull-right').addClass('small')
+                        ).append(
+                            $('<span>').append(i.orititle).addClass('orititle').hide()
+                        ).append(
+                            $('<img>').append('img').attr('data-bg',i.bg).addClass('img').hide().on('click',e=>{
+                                $('.imagepreview').attr('src',$(e.target).attr('data-bg'));
+                                $('#imagemodal').modal('show');
+                            }).attr('src','data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACAUlEQVQ4T9XUv2sUQRQH8O+bvTsDanK53SSFhYKtYOE/EJLspQgWogg2ibldRG1SKMFAKo0agoVYmCsyS7iQFIK/QBB3zx9NOsHC/0AUktzOqaRIuNzOkzWgHjnZO0iTKYf3PjDfNzOEfV60zx4OEHh0cNTMUHpOC5jtxCA0VI13JjffllTc9+fI1pBzk4EuCGO5HZC1LgjwRliWDxpAM+9Mg/mrCrzFZmDXyLVuo1ZbAtBHhLvKly/iOssuXGUiS/lyJhE0B0aPqXelb7uN7g0m3hK1QyXObK+Gvne6HZBM25mNoMdSgi6Fb7z3ubx7QTAXNCFgjbPfy3KgNTC7uWT96Cwy9DaB7jP0cyJjJvTlq1zevUisT6Yos7DuFzcSQWKsMXiYQZ+rgbwDgDuHnVxG4yUY82FZrsTI7h6Nh1XxyMrVnaYZWrZ7myM+hxTmlS8f/zuYnv7rR3R66xlBPI0Iq4JpBdAfWeM4iF6TQMeeoXTb4/cE6LAKvIlmUz7Rf7njp0FPCHzKION8pSw/WUPOCJMuArSsAu9W4pT3wGeupM1s5EHQFxUsTMeRmHlniplT1cCLI/p7sU3bmQR0VpP4ndN/lyBBEU8BzGyIWSPiMQbWVSDnGsDeQbevLvghgJ7WXgr1gnRFsAhppz5R+bC41gC2hiRXHaDvK/kwrVX8Apf+9xVjiWI7AAAAAElFTkSuQmCC')
                         ).on('click',e=>{
-                            play($(e.currentTarget));
+                            if(e.currentTarget===e.target)play($(e.currentTarget));
                         })
                         .addClass('list-group-item')
                         .attr('data-mp3',i.mp3)
                         .attr('data-title',i.title)
+                        
                     );
                 }
-                window.lst=new List('plist',{valueNames: ['title','artist']});
-                console.log(window.lst);
+                window.lst=new List('plist',{valueNames: ['title','artist','orititle']});
             });
         };
         function reload(){

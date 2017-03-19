@@ -33,9 +33,12 @@ function load(){
                                 parser.parseFile(sp,(err,bm)=>{
                                     if(err)return;
                                     list.push({
-                                        title:bm.TitleUnicode||bm.Title,
-                                        mp3:path.join(p,bm.AudioFilename),
-                                        artist: bm.Artist
+                                        title: bm.TitleUnicode||bm.Title,
+                                        orititle: bm.Title,
+                                        mp3: path.join(p,bm.AudioFilename),
+                                        artist: bm.Artist,
+                                        id: d.split(' ')[0],
+                                        bg: path.join(p,bm.bgFilename||'0')
                                     });
                                     cnt++;
                                     if(cnt%100==0){
@@ -80,8 +83,11 @@ ipcMain.on('start',(e,data)=>{
     else endload(JSON.stringify(list),Date.now());
 });
 ipcMain.on('reload',(e,data)=>{
-    console.log('start loading');
-    load();
+    win.loadURL(url.format({
+        pathname: path.join(__dirname, 'index.html'),
+        protocol: 'file:',
+        slashes: true
+    }));
 });
 function createWindow () {
     win=new BrowserWindow({width: 400, height: 600,resizable: false});

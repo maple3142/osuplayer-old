@@ -4,6 +4,8 @@
 }
 #list{
     height: 80vh;
+    background-color: none;
+    background: none;
 }
 form{
     display: inline;
