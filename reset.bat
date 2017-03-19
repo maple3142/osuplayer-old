@@ -1,0 +1,1 @@
+@type list.json.bak > list.json
