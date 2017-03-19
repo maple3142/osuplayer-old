@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Osu!Player</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!--script-->
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="jquery.js"></script>
+        <script src="bootstrap/js/bootstrap.min.js"></script>
+        <script src="list.min.js"></script>
+        <script>if (window.module) module = window.module;</script>
+        <!--script<-->
+        <!--css-->
+        <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="style.css">
+        <!--css-->
+    </head>
+    <body>
+    <div class="row">
+        <div id="loading" class="text-center col"><h1>loading...</h1></div>
+        <div id="panel" class="navbar-fixed-bottom">
+            <span id="title" class="col-sm-12 text-center"></span>
+            <audio id="audio" controls class="col-sm-12"></audio>
+        </div>
+        <div class="plist">
+            <input class="search">
+            <span class="sort" data-sort="title">Sort by title</span>
+            <ul id="list" class="list-group small offset1"></ul>
+        </div>
+    </div>
+    <script>
+        var now,lst;
+        function rd(min,max) {
+            return Math.random()*(max-min)+min;
+        }
+        function randomPlay(){
+            var ls=$('.list-group-item');
+            var el=ls[Math.floor(rd(0,ls.length))];
+            play($(el));
+        }
+        function updmode(x){
+            $('#audio').on('ended',e=>{
+                switch(x){
+                    case 1:
+                        play(now.next());
+                        break;
+                    case 2:
+                        randomPlay();
+                        break;
+                    case 3:
+                        play(now.prev());
+                        break;
+                }
+                
+            });
+        }
+        updmode(1);
+        function play(f){
+            now=f;
+            $('#audio')[0].src=f.attr('mp3');
+            $('#audio').show()[0].play();
+            $('#title').text(f.text());
+            $('title').text('Osu!Player <'+f.text()+'>');
+        }
+        window.onload=()=>{
+            var ipc=require('electron').ipcRenderer;
+            var start=setInterval(()=>{
+                ipc.send('start','none');
+                clearInterval(start);
+            },1000);
+            ipc.once('load',(e,data)=>{
+                $('#loading').hide();
+                var list=JSON.parse(data);
+                console.log(list);
+                for(var i=0;i<list.length;i++){
+                    $('#list').append(
+                        $('<li>').append(
+                            $('<span>').append(list[i].title).addClass('title')
+                        ).on('click',e=>{
+                            play($(e.target));
+                        })
+                        .addClass('list-group-item')
+                        .attr('mp3',list[i].mp3)
+                        .data('title',list[i].title)
+                    );
+                }
+                lst=new List('plist',{valueNames: ['title']});
+            });
+        };
+        function reload(){
+            ipc.send('reload','none');
+        }
+    </script>
+    </body>
+</html>
