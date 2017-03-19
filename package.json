@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "electron": "^1.6.2"
+    "electron": "^1.6.2",
+    "osu-parser": "^0.3.3"
   }
 }

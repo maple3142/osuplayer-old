@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Osu!Player</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!--script-->
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="jquery.js"></script>
+        <script src="bootstrap/js/bootstrap.min.js"></script>
+        <script src="list.min.js"></script>
+        <script>if (window.module) module = window.module;</script>
+        <!--script<-->
+        <!--css-->
+        <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="style.css">
+        <!--css-->
+    </head>
+    <body class="container-fluid">
+    <div class="row">
+        <div id="loading" class="text-center col"><h1>loading...</h1></div>
+        <div id="plist">
+            <input class="search form-control navbar-fixed-top" id="#search" placeholder="Search...">
+            <span class="input-group-btn sort" data-sort="title"></span>
+            <span class="input-group-btn sort" data-sort="artist"></span>
+            <ul class="list list-group">
+                
+            </ul>
+        </div>
+        <div id="panel" class="navbar-fixed-bottom">
+            <span id="title" class="col-xs-12 text-center"></span>
+            <audio id="audio" controls class="col-xs-12"></audio>
+        </div>
+    </div>
+    <script>
+        var now;
+        function rd(min,max) {
+            return Math.random()*(max-min)+min;
+        }
+        function randomPlay(){
+            var ls=$('.list-group-item');
+            var el=ls[Math.floor(rd(0,ls.length))];
+            play($(el));
+        }
+        function updmode(x){
+            $('#audio').on('ended',e=>{
+                switch(x){
+                    case 1:
+                        play(now.next());
+                        break;
+                    case 2:
+                        randomPlay();
+                        break;
+                    case 3:
+                        play(now.prev());
+                        break;
+                }
+                
+            });
+        }
+        updmode(1);
+        function play(f){
+            now=f;
+            $('#audio')[0].src=f.attr('data-mp3');
+            $('#audio')[0].play();
+            $('#title').text(f.find('.title').text());
+            $('title').text('Osu!Player <'+f.find('.title').text()+'>');
+            $('.list-group-item-success').removeClass('list-group-item-success');
+            $(now).addClass('list-group-item-success');
+
+        }
+        window.onload=()=>{
+            var ipc=require('electron').ipcRenderer;
+            var start=setInterval(()=>{
+                ipc.send('start','none');
+                clearInterval(start);
+            },1000);
+            ipc.once('load',(e,data)=>{
+                $('#loading').hide();
+                var list=JSON.parse(data);
+                for(i of list){
+                    $('.list').append(
+                        $('<li>').append(
+                            $('<span>').append(i.title).addClass('title')
+                        ).append(
+                            $('<span>').append(i.artist).addClass('artist').addClass('pull-right').addClass('small')
+                        ).on('click',e=>{
+                            play($(e.currentTarget));
+                        })
+                        .addClass('list-group-item')
+                        .attr('data-mp3',i.mp3)
+                        .attr('data-title',i.title)
+                    );
+                }
+                window.lst=new List('plist',{valueNames: ['title','artist']});
+                console.log(window.lst);
+            });
+        };
+        function reload(){
+            ipc.send('reload','none');
+        }
+    </script>
+    </body>
+</html>
