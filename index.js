@@ -26,7 +26,8 @@ function load(){
                                     if(err)return;
                                     list.push({
                                         title:bm.TitleUnicode||bm.Title,
-                                        mp3:path.join(p,bm.AudioFilename)
+                                        mp3:path.join(p,bm.AudioFilename),
+                                        artist: bm.Artist
                                     });
                                     cnt++;
                                     if(cnt%100==0){
@@ -75,7 +76,7 @@ ipcMain.on('reload',(e,data)=>{
     load();
 });
 function createWindow () {
-    win=new BrowserWindow({width: 400, height: 600});
+    win=new BrowserWindow({width: 400, height: 600,resizable: false});
     win.loadURL(url.format({
         pathname: path.join(__dirname, 'index.html'),
         protocol: 'file:',

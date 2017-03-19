@@ -37,7 +37,7 @@ module.exports=(g)=>{
                 ]
             },
             {
-                label: 'dev',
+                label: 'DevTools',
                 click(){g.win.webContents.openDevTools()}
             }
         ];

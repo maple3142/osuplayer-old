@@ -20,9 +20,10 @@
     <div class="row">
         <div id="loading" class="text-center col"><h1>loading...</h1></div>
         <div id="plist">
-            <input class="search form-control" id="#search">
-            <span class="input-group-btn sort" data-sort="title">sort</span>
-            <ul class="list list-group small">
+            <input class="search form-control navbar-fixed-top" id="#search" placeholder="Search...">
+            <span class="input-group-btn sort" data-sort="title"></span>
+            <span class="input-group-btn sort" data-sort="artist"></span>
+            <ul class="list list-group">
                 
             </ul>
         </div>
@@ -62,8 +63,11 @@
             now=f;
             $('#audio')[0].src=f.attr('data-mp3');
             $('#audio')[0].play();
-            $('#title').text(f.text());
-            $('title').text('Osu!Player <'+f.text()+'>');
+            $('#title').text(f.find('.title').text());
+            $('title').text('Osu!Player <'+f.find('.title').text()+'>');
+            $('.list-group-item-success').removeClass('list-group-item-success');
+            $(now).addClass('list-group-item-success');
+
         }
         window.onload=()=>{
             var ipc=require('electron').ipcRenderer;
@@ -78,6 +82,8 @@
                     $('.list').append(
                         $('<li>').append(
                             $('<span>').append(i.title).addClass('title')
+                        ).append(
+                            $('<span>').append(i.artist).addClass('artist').addClass('pull-right').addClass('small')
                         ).on('click',e=>{
                             play($(e.currentTarget));
                         })
@@ -86,7 +92,7 @@
                         .attr('data-title',i.title)
                     );
                 }
-                window.lst=new List('plist',{valueNames: ['title']});
+                window.lst=new List('plist',{valueNames: ['title','artist']});
                 console.log(window.lst);
             });
         };

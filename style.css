@@ -3,8 +3,12 @@
     width: 100%;
 }
 #list{
-    height: 90vh;
+    height: 80vh;
 }
 form{
     display: inline;
+}
+body{
+    padding-top: 7vh;
+    padding-bottom: 7vh;
 }
