@@ -34,7 +34,7 @@
     <div class="row">
         <div id="loading" class="text-center col"><h1>loading...</h1></div>
         <div id="plist">
-            <input class="search form-control navbar-fixed-top" id="#search" placeholder="Search...">
+            <input class="search form-control navbar-fixed-top" id="search" placeholder="Search...">
             <span class="input-group-btn sort" data-sort="title"></span>
             <span class="input-group-btn sort" data-sort="artist"></span>
             <span class="input-group-btn sort" data-sort="orititle"></span>
@@ -60,6 +60,11 @@
         $(document).on('contextmenu','a[href^="http"]',e=>{
             e.preventDefault();
             clipboard.writeText(e.originalEvent.target.innerText);
+        });
+        $(document).on('click','#title',e=>{
+            let t=$('#title').text();
+            $('#search').val(t);
+            lst.search(t);
         });
         function rd(min,max) {
             return Math.random()*(max-min)+min;
@@ -87,14 +92,18 @@
         }
         updmode(1);
         function play(f){
-            if(now&&f.text()==now.text())return;
+            if(now&&f.attr('data-id')===now.attr('data-id'))return;
             now=f;
             $('#audio')[0].src=f.attr('data-mp3');
             $('#audio')[0].play();
             $('#title').text(f.find('.title').text());
             $('title').text('Osu!Player <'+f.find('.title').text()+'>');
-            $('.list-group-item-success').removeClass('list-group-item-success');
-            $('.img').hide();
+            $.grep(lst.items.map(e=>e.elm),e=>{
+                let el=$(e);
+                if(el.hasClass('list-group-item-success')){
+                    el.removeClass('list-group-item-success').find('.img').hide();
+                }
+            });
             now.addClass('list-group-item-success').find('.img').show();
             
         }
@@ -107,6 +116,7 @@
             ipc.once('load',(e,data)=>{
                 $('#loading').hide();
                 var list=JSON.parse(data);
+                var id=0;
                 for(i of list){
                     $('.list').append(
                         $('<li>').append(
@@ -128,8 +138,9 @@
                         .addClass('list-group-item')
                         .attr('data-mp3',i.mp3)
                         .attr('data-title',i.title)
-                        
+                        .attr('data-id',id.toString())
                     );
+                    id++;
                 }
                 window.lst=new List('plist',{valueNames: ['title','artist','orititle']});
             });
