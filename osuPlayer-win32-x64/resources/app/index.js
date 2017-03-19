@@ -41,10 +41,10 @@ function load(){
                                         bg: path.join(p,bm.bgFilename||'0')
                                     });
                                     cnt++;
-                                    if(cnt%100==0){
+                                    if(Math.floor(cnt%100)===0){
                                         console.log('processing: '+cnt);
                                     }
-                                    if(cnt==dirs.length){//end
+                                    if(cnt===dirs.length){//end
                                         var data=JSON.stringify(list);
                                         endload(data,start);
                                         fs.writeFile('list.json',data,err=>{
@@ -68,18 +68,18 @@ function endload(data,start){
 }
 app.on('ready',createWindow);
 app.on('window-all-closed',()=>{
-    app.quit()
+    app.quit();
 });
 app.on('activate',()=>{
     if(win===null){
-        createWindow()
+        createWindow();
     }
 });
 ipcMain.on('start',(e,data)=>{
     sender=e.sender;
     console.log('start loading');
     var list=require('./list.json');
-    if(list.length==0)load(e);
+    if(list.length===0)load(e);
     else endload(JSON.stringify(list),Date.now());
 });
 ipcMain.on('reload',(e,data)=>{
@@ -99,6 +99,6 @@ function createWindow () {
     var menu=Menu.buildFromTemplate(require('./meumTemplate.js')({process,win}));
     Menu.setApplicationMenu(menu);
     win.on('closed', () => {
-        win=null
+        win=null;
     });
 }
