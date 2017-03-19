@@ -2,8 +2,16 @@ const parser=require('osu-parser');
 const path=require('path');
 const fs=require('fs');
 const {app,BrowserWindow,ipcMain,Menu}=require('electron');
-const url = require('url');
-const osudir='C:\\Users\\maple3142\\AppData\\Local\\osu!\\Songs';
+const url=require('url');
+var setting=require('./settings.json');
+var osudir=setting.osupath;
+if(!osudir){
+    osudir=setting.osupath=path.join(process.env.APPDATA,'../local/osu!/Songs');
+    console.log(setting.osupath);
+    fs.writeFile('./settings.json',JSON.stringify(setting),err=>{
+        if(err)return;
+    });
+}
 
 var win,sender;
 function load(){
