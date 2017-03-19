@@ -14,6 +14,7 @@ module.exports=(g)=>{
                     },
                     {
                         label: 'exit',
+                        role: 'close',
                         click(){g.process.exit()}
                     }
                 ]

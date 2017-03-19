@@ -16,21 +16,23 @@
         <link rel="stylesheet" href="style.css">
         <!--css-->
     </head>
-    <body>
+    <body class="container-fluid">
     <div class="row">
         <div id="loading" class="text-center col"><h1>loading...</h1></div>
-        <div id="panel" class="navbar-fixed-bottom">
-            <span id="title" class="col-sm-12 text-center"></span>
-            <audio id="audio" controls class="col-sm-12"></audio>
+        <div id="plist">
+            <input class="search form-control" id="#search">
+            <span class="input-group-btn sort" data-sort="title">sort</span>
+            <ul class="list list-group small">
+                
+            </ul>
         </div>
-        <div class="plist">
-            <input class="search">
-            <span class="sort" data-sort="title">Sort by title</span>
-            <ul id="list" class="list-group small offset1"></ul>
+        <div id="panel" class="navbar-fixed-bottom">
+            <span id="title" class="col-xs-12 text-center"></span>
+            <audio id="audio" controls class="col-xs-12"></audio>
         </div>
     </div>
     <script>
-        var now,lst;
+        var now;
         function rd(min,max) {
             return Math.random()*(max-min)+min;
         }
@@ -58,8 +60,8 @@
         updmode(1);
         function play(f){
             now=f;
-            $('#audio')[0].src=f.attr('mp3');
-            $('#audio').show()[0].play();
+            $('#audio')[0].src=f.attr('data-mp3');
+            $('#audio')[0].play();
             $('#title').text(f.text());
             $('title').text('Osu!Player <'+f.text()+'>');
         }
@@ -72,20 +74,20 @@
             ipc.once('load',(e,data)=>{
                 $('#loading').hide();
                 var list=JSON.parse(data);
-                console.log(list);
-                for(var i=0;i<list.length;i++){
-                    $('#list').append(
+                for(i of list){
+                    $('.list').append(
                         $('<li>').append(
-                            $('<span>').append(list[i].title).addClass('title')
+                            $('<span>').append(i.title).addClass('title')
                         ).on('click',e=>{
-                            play($(e.target));
+                            play($(e.currentTarget));
                         })
                         .addClass('list-group-item')
-                        .attr('mp3',list[i].mp3)
-                        .data('title',list[i].title)
+                        .attr('data-mp3',i.mp3)
+                        .attr('data-title',i.title)
                     );
                 }
-                lst=new List('plist',{valueNames: ['title']});
+                window.lst=new List('plist',{valueNames: ['title']});
+                console.log(window.lst);
             });
         };
         function reload(){

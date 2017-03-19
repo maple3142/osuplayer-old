@@ -5,3 +5,6 @@
 #list{
     height: 90vh;
 }
+form{
+    display: inline;
+}
