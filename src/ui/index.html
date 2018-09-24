@@ -5,15 +5,8 @@
 	<title>Osu!Player</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!--script-->
-	<script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
-	<script src="jquery.js"></script>
-	<script src="bootstrap/js/bootstrap.min.js"></script>
-	<script src="list.min.js"></script>
-	<script>if (window.module) module = window.module;</script>
-	<!--script<-->
 	<!--css-->
-	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
 	<link rel="stylesheet" href="style.css">
 	<!--css-->
 </head>
@@ -51,113 +44,7 @@
 			<audio id="audio" controls class="col-xs-12"></audio>
 		</div>
 	</div>
-	<script>
-		var now, path = require('path'), bm = 'http://osu.ppy.sh/s/';
-		var { shell, clipboard } = require('electron');
-		const fs = require('fs-extra')
-		$(document).on('click', 'a[href^="http"]', e => {
-			e.preventDefault();
-			shell.openExternal(e.target.href);
-		});
-		$('#oip').contextmenu(e => {
-			shell.openExternal(e.originalEvent.target.src);
-		});
-		$(document).on('contextmenu', 'a[href^="http"]', e => {
-			e.preventDefault();
-			clipboard.writeText(e.originalEvent.target.innerText);
-		});
-		$(document).on('click', '#title', e => {
-			let t = $('#title').text();
-			$('#search').val(t);
-			lst.search(t);
-		});
-		function rd(min, max) {
-			return Math.random() * (max - min) + min;
-		}
-		function randomPlay() {
-			var ls = $('.list-group-item');
-			var el = ls[Math.floor(rd(0, ls.length))];
-			play($(el));
-		}
-		function updmode(x) {
-			$('#audio').on('ended', e => {
-				switch (x) {
-					case 1:
-						play(now.next());
-						break;
-					case 2:
-						randomPlay();
-						break;
-					case 3:
-						play(now.prev());
-						break;
-				}
-
-			});
-		}
-		updmode(1);
-		function play(f) {
-			if (now && f.attr('data-id') === now.attr('data-id')) return;
-			now = f;
-			const p = f.attr('data-mp3')
-			$('#audio')[0].src = p;
-			$('#audio')[0].play();
-			$('#title').text(f.find('.title').text());
-			$('title').text('Osu!Player <' + f.find('.title').text() + '>');
-			$.grep(lst.items.map(e => e.elm), e => {
-				let el = $(e);
-				if (el.hasClass('list-group-item-success')) {
-					el.removeClass('list-group-item-success').find('.img').hide();
-				}
-			});
-			now.addClass('list-group-item-success').find('.img').show();
-		}
-		window.onload = () => {
-			var ipc = require('electron').ipcRenderer;
-			var start = setInterval(() => {
-				ipc.send('start', 'none');
-				clearInterval(start);
-			}, 1000);
-			ipc.once('load', (e, data) => {
-				$('#loading').hide();
-				var list = JSON.parse(data);
-				var id = 0;
-				for (i of list) {
-					$('.list').append(
-						$('<li>').append(
-							$('<span>').append(
-								(() => {
-									const $a = $('<a>').append(i.title)
-									if (i.id) $a.attr('href', path.join(bm, i.id))
-									return $a
-								})()
-							).addClass('title')
-						).append(
-							$('<span>').append(i.artist).addClass('artist').addClass('pull-right').addClass('small')
-						).append(
-							$('<span>').append(i.orititle).addClass('orititle').hide()
-						).append(
-							$('<img>').append('img').attr('data-bg', i.bg).addClass('img').hide().on('click', e => {
-								$('.imagepreview').attr('src', $(e.target).attr('data-bg'));
-								$('#imagemodal').modal('show');
-							}).attr('src', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACAUlEQVQ4T9XUv2sUQRQH8O+bvTsDanK53SSFhYKtYOE/EJLspQgWogg2ibldRG1SKMFAKo0agoVYmCsyS7iQFIK/QBB3zx9NOsHC/0AUktzOqaRIuNzOkzWgHjnZO0iTKYf3PjDfNzOEfV60zx4OEHh0cNTMUHpOC5jtxCA0VI13JjffllTc9+fI1pBzk4EuCGO5HZC1LgjwRliWDxpAM+9Mg/mrCrzFZmDXyLVuo1ZbAtBHhLvKly/iOssuXGUiS/lyJhE0B0aPqXelb7uN7g0m3hK1QyXObK+Gvne6HZBM25mNoMdSgi6Fb7z3ubx7QTAXNCFgjbPfy3KgNTC7uWT96Cwy9DaB7jP0cyJjJvTlq1zevUisT6Yos7DuFzcSQWKsMXiYQZ+rgbwDgDuHnVxG4yUY82FZrsTI7h6Nh1XxyMrVnaYZWrZ7myM+hxTmlS8f/zuYnv7rR3R66xlBPI0Iq4JpBdAfWeM4iF6TQMeeoXTb4/cE6LAKvIlmUz7Rf7njp0FPCHzKION8pSw/WUPOCJMuArSsAu9W4pT3wGeupM1s5EHQFxUsTMeRmHlniplT1cCLI/p7sU3bmQR0VpP4ndN/lyBBEU8BzGyIWSPiMQbWVSDnGsDeQbevLvghgJ7WXgr1gnRFsAhppz5R+bC41gC2hiRXHaDvK/kwrVX8Apf+9xVjiWI7AAAAAElFTkSuQmCC')
-						).on('click', e => {
-							if (e.currentTarget === e.target) play($(e.currentTarget));
-						})
-							.addClass('list-group-item')
-							.attr('data-mp3', i.mp3)
-							.attr('data-title', i.title)
-							.attr('data-id', id.toString())
-					);
-					id++;
-				}
-				window.lst = new List('plist', { valueNames: ['title', 'artist', 'orititle'] });
-			});
-		};
-		function reload() {
-			ipc.send('reload', 'none');
-		}
-	</script>
+	<script src="app.js"></script>
 </body>
 
 </html>
