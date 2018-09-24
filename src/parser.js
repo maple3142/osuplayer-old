@@ -1,3 +1,5 @@
+const fs = require('fs')
+const readline = require('readline')
 const tryParseNum = num => {
 	const n = Number(num)
 	return isNaN(n) ? num : n
@@ -9,41 +11,6 @@ const tryDecodeUri = str => {
 		return str
 	}
 }
-const preProcess = ct => {
-	const obj = {}
-	let mode
-	for (const line of ct.split(/(\n|\r\n)/)) {
-		if (/^\[\w+\]$/.test(line)) {
-			// match [Difficulty] [Metadata]...
-			mode = /^\[(\w+)\]$/.exec(line)[1]
-			// ignore Events
-			if (mode !== 'Events') obj[mode] = {}
-		} else if (line.includes(':')) {
-			const [k, v] = line.split(':').map(chk => chk.trim())
-			obj[mode][k] = tryParseNum(v)
-		} else if (mode === 'Events' && line.startsWith('0,0,"')) {
-			// get bg file and break
-			obj.Metadata.bg = tryDecodeUri(/"(.+?)"/.exec(line)[1])
-			break
-		}
-	}
-	return obj
-}
-const postProcess = obj => {
-	if (obj.Metadata.Tags) {
-		obj.Metadata.Tags = obj.Metadata.Tags.split('s')
-			.filter(x => x)
-			.map(chk => chk.trim())
-	}
-	return obj
-}
-exports.parse = ct => {
-	try {
-		return postProcess(preProcess(ct))
-	} catch (e) {
-		throw new ParseError(ct, e)
-	}
-}
 class ParseError extends Error {
 	constructor(content, e) {
 		super()
@@ -51,3 +18,83 @@ class ParseError extends Error {
 		this.originalStack = e.stack
 	}
 }
+
+class Parser {
+	constructor() {
+		this.obj = {}
+		this.mode = ''
+	}
+	eat(line) {
+		if (/^\[\w+\]$/.test(line)) {
+			// match [Difficulty] [Metadata]...
+			this.mode = /^\[(\w+)\]$/.exec(line)[1]
+			// ignore Events
+			if (this.mode !== 'Events' || this.mode !== 'TimingPoints') this.obj[this.mode] = {}
+		} else if (line.includes(':')) {
+			const [k, v] = line.split(':').map(chk => chk.trim())
+			this.obj[this.mode][k] = tryParseNum(v)
+		} else if (this.mode === 'Events' && line.startsWith('0,0,"')) {
+			// get bg file and break
+			this.obj.Metadata.bg = tryDecodeUri(/"(.+?)"/.exec(line)[1])
+			this.postProcess()
+			return true
+		} else if (this.mode === 'TimingPoints') {
+			// no be
+			this.postProcess()
+			return true
+		}
+		return false
+		// return false means not complete
+	}
+	postProcess() {
+		if (this.obj.Metadata.Tags) {
+			this.obj.Metadata.Tags = this.obj.Metadata.Tags.split('s')
+				.filter(x => x)
+				.map(chk => chk.trim())
+		}
+	}
+	get() {
+		return this.obj
+	}
+	static parse(ct) {
+		const parser = new Parser()
+		for (const line of ct.split(/(\n|\r\n)/)) {
+			try {
+				const end = parser.eat(line)
+				if (end) {
+					break
+				}
+			} catch (e) {
+				throw new ParseError(ct, e)
+			}
+		}
+		return parser.get()
+	}
+	static parseFromFile(filepath) {
+		const st = readline.createInterface({ input: fs.createReadStream(filepath), crlfDelay: Infinity })
+		return new Promise((res, rej) => {
+			const parser = new Parser()
+			let end = false
+			st.on('line', line => {
+				if (end) {
+					return
+				}
+				try {
+					end = parser.eat(line)
+					if (end) {
+						st.close()
+						res(parser.get())
+					}
+				} catch (e) {
+					rej(new ParseError(line, e))
+				}
+			})
+			st.on('close', e => {
+				st.close()
+				if (e) rej(e)
+			})
+		})
+	}
+}
+Parser.ParseError = ParseError
+module.exports = Parser

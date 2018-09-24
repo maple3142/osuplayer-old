@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs-extra')
-const parser = require('./parser')
+const Parser = require('./parser')
 
 module.exports = async osupath => {
 	if (!(await fs.exists(osupath))) {
@@ -15,10 +15,12 @@ module.exports = async osupath => {
 		const osufiles = (await fs.readdir(entry))
 			.filter(file => file.endsWith('.osu'))
 			.map(file => path.join(entry, file))
-		if (osufiles.length < 1) continue
-		const content = await fs.readFile(osufiles[0], 'utf-8')
+		if (osufiles.length < 1) {
+			// no .osu files
+			continue
+		}
 		try {
-			const data = parser.parse(content)
+			const data = await Parser.parseFromFile(osufiles[0])
 			const regr = /\d+/.exec(entry)
 			result.push({
 				title: data.Metadata.Title,
@@ -28,9 +30,22 @@ module.exports = async osupath => {
 				bg: data.Metadata.bg ? path.join(entry, data.Metadata.bg) : null
 			})
 		} catch (e) {
-			throw new Error('invalid-content')
-			return
+			console.error(e)
+			if (e instanceof Parser.ParseError) {
+				throw new Error('invalid-content')
+			} else {
+				throw e
+			}
 		}
 	}
 	return result
+}
+if (require.main === module) {
+	const osupath = process.argv[2]
+	if (!osupath) return
+	module
+		.exports(osupath)
+		.then(JSON.stringify)
+		.then(console.log)
+		.catch(console.error)
 }
