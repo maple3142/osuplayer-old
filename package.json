@@ -8,7 +8,7 @@
 		"start": "electron ."
 	},
 	"dependencies": {
-		"bootstrap": "3.3.7",
+		"bootstrap": "4.0.0",
 		"electron": "^1.6.2",
 		"fs-extra": "^7.0.0",
 		"jquery": "^3.3.1",
